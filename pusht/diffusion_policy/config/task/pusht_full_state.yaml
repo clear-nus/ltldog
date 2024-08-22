@@ -1,0 +1,30 @@
+name: pusht_full_state
+
+obs_dim: 5 # agent pos (2) + block pos (2) + block rot (1)
+action_dim: 2
+# keypoint_dim: 2
+
+env_runner:
+  _target_: diffusion_policy.env_runner.pusht_full_state_runner.PushTFullStateRunner
+  n_train: 6
+  n_train_vis: 2
+  train_start_seed: 0
+  n_test: 50
+  n_test_vis: 4
+  legacy_test: True
+  test_start_seed: 100000
+  max_steps: 300
+  n_obs_steps: ${n_obs_steps}
+  n_action_steps: ${n_action_steps}
+  n_latency_steps: ${n_latency_steps}
+  fps: 10
+  past_action: ${past_action_visible}
+  n_envs: null
+
+dataset:
+  _target_: diffusion_policy.dataset.pusht_dataset.PushTStateDataset
+  zarr_path: data/pusht/pusht_cchi_v7_replay.zarr
+  horizon: ${horizon}
+  seed: 42
+  val_ratio: 0.02
+  max_train_episodes: 90

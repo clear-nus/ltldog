@@ -1,0 +1,153 @@
+defaults:
+  - _self_
+  - task: H192O2_pusht_value_until_4
+
+name: train_diffusion_unet_ltl_value
+_target_: diffusion_policy.workspace.train_ltl_value_workspace.TrainLTLValueWorkspace
+
+obs_dim: ${task.obs_dim}
+action_dim: ${task.action_dim}
+keypoint_dim: ${task.keypoint_dim}
+task_name: ${task.name}
+exp_name: "PushT-EF-Until_4-Value-H192-O2"
+
+horizon: 192
+n_obs_steps: 2
+n_action_steps: 192
+n_latency_steps: 0
+past_action_visible: False
+keypoint_visible_rate: 1.0
+obs_as_local_cond: False
+obs_as_global_cond: True
+pred_action_steps_only: False
+
+policy:
+  _target_: diffusion_policy.policy.diffusion_unet_ltl_value.DiffusionUnetLTLValue
+
+  model:
+    _target_: diffusion_policy.model.diffusion.value_classifier.ConditionalValueUnet1D
+    horizon: ${horizon}
+    input_dim: "${eval: ${task.action_dim} if ${obs_as_local_cond} or ${obs_as_global_cond} else ${task.obs_dim} + ${task.action_dim}}"
+    local_cond_dim: "${eval: ${task.obs_dim} if ${obs_as_local_cond} else None}"
+    global_cond_dim: "${eval: ${task.obs_dim}*${n_obs_steps} if ${obs_as_global_cond} else None}"
+    diffusion_step_embed_dim: 256
+    down_dims: [256, 512, 1024]
+    kernel_size: 5
+    n_groups: 8
+    cond_predict_scale: True
+    ltl_embed_input_dim: 22
+    ltl_embed_output_dim: 32
+    ltl_embed_hidden_dim: 32
+    ltl_embed_num_layers: 8
+  
+  noise_scheduler:
+    _target_: diffusers.schedulers.scheduling_ddpm.DDPMScheduler
+    num_train_timesteps: 256
+    beta_start: 0.0001
+    beta_end: 0.02
+    beta_schedule: squaredcos_cap_v2
+    variance_type: fixed_small # Yilun's paper uses fixed_small_log instead, but easy to cause Nan
+    clip_sample: True # required when predict_epsilon=False
+    prediction_type: epsilon # or sample
+
+  horizon: ${horizon}
+  obs_dim: ${obs_dim}
+  action_dim: ${action_dim}
+  n_action_steps: ${eval:'${n_action_steps}+${n_latency_steps}'}
+  n_obs_steps: ${n_obs_steps}
+  num_inference_steps: 256
+  obs_as_local_cond: ${obs_as_local_cond}
+  obs_as_global_cond: ${obs_as_global_cond}
+  pred_action_steps_only: ${pred_action_steps_only}
+  oa_step_convention: True
+
+  # scheduler.step params
+  # predict_epsilon: True
+
+ema:
+  _target_: diffusion_policy.model.diffusion.ema_model.EMAModel
+  update_after_step: 0
+  inv_gamma: 1.0
+  power: 0.75
+  min_value: 0.0
+  max_value: 0.9999
+
+dataloader:
+  batch_size: 2048
+  num_workers: 1
+  shuffle: True
+  # accelerate cpu-gpu transfer
+  pin_memory: True
+  # don't kill worker process afte each epoch
+  persistent_workers: True
+
+val_dataloader:
+  batch_size: 2048
+  num_workers: 1
+  shuffle: False
+  # accelerate cpu-gpu transfer
+  pin_memory: True
+  # don't kill worker process afte each epoch
+  persistent_workers: False
+
+optimizer:
+  _target_: torch.optim.AdamW
+  lr: 1.0e-5
+  betas: [0.95, 0.999]
+  eps: 1.0e-8
+  weight_decay: 1.0e-6
+
+training:
+  device: "cuda:0"
+  seed: 42
+  debug: False
+  resume: True
+  # optimization
+  lr_scheduler: cosine
+  lr_warmup_steps: 1000
+  num_epochs: 5
+  gradient_accumulate_every: 1
+  use_ema: True
+  # training loop control
+  # in epochs
+  rollout_every: 1
+  checkpoint_every: 1
+  val_every: 1
+  sample_every: 1
+  # steps per epoch
+  max_train_steps: null
+  max_val_steps: null
+  # misc
+  tqdm_interval_sec: 1.0
+
+logging:
+  project: pusht_rg
+  resume: True
+  # mode: offline
+  mode: online
+  name: H${horizon}O${n_obs_steps}A${n_action_steps}D${policy.num_inference_steps}_Value_EF_until-4_${now:%Y.%m.%d-%H.%M.%S}_${name}_${task_name}
+  tags: ["H${horizon}O${n_obs_steps}A${n_action_steps}D${policy.num_inference_steps}", "${name}", "${task_name}", "${exp_name}"]
+  id: null
+  group: null
+
+checkpoint:
+  topk:
+    monitor_key: val_loss
+    mode: min
+    k: 5
+    format_str: 'epoch={epoch:04d}-val_loss={val_loss:.5f}.ckpt'
+  save_last_ckpt: True
+  save_last_snapshot: False
+
+multi_run:
+  run_dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+  wandb_name_base: ${now:%Y.%m.%d-%H.%M.%S}_${name}_${task_name}
+
+hydra:
+  job:
+    override_dirname: ${name}
+  run:
+    dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+  sweep:
+    dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+    subdir: ${hydra.job.num}
