@@ -173,12 +173,6 @@ class LTLsValueDataset(ConstraintValueDataset):
             graphs[i][0].nodes[None].data['is_root'] = weight.cuda()
         return graphs
 
-    def __getitem__base(self, idx):
-        return super().__getitem__(idx)
-
-    def __len__base(self):
-        return super().__len__()
-
     def _get_values(self):
         from dtl.dtl_cont_cons import DTL_Cont_Cons_Evaluator
         from config.maze2d_constraints import con_groups
@@ -188,11 +182,12 @@ class LTLsValueDataset(ConstraintValueDataset):
         evaluator = DTL_Cont_Cons_Evaluator(device='cuda')
         evaluator.set_atomic_props(con_groups[self.env.name])
         batch_size = 512
+        obj_super = super()
         class IterSuper(torch.utils.data.Dataset):
             def __len__(self):
-                return self.__len__base()
+                return obj_super.__len__()
             def __getitem__(self, idx):
-                return self.__getitem__base(idx)
+                return obj_super.__getitem__(idx)
         iter_super = IterSuper()
         loader_super = torch.utils.data.DataLoader(iter_super, batch_size=batch_size)
 
@@ -217,7 +212,7 @@ class LTLsValueDataset(ConstraintValueDataset):
         idx_trj = idx // self.n_train_ltls
         idx_ltl = idx % self.n_train_ltls
 
-        batch = self.__getitem__base(idx_trj)
+        batch = super().__getitem__(idx_trj)
 
         value = self.values[idx_trj, idx_ltl]
         if self.normed:
@@ -235,7 +230,7 @@ class LTLsValueDataset(ConstraintValueDataset):
     def test__getitem__(self, idx):
         idx_trj = idx // self.n_test_ltls
         idx_ltl = idx % self.n_test_ltls + self.n_train_ltls
-        batch = self.__getitem__base(idx_trj)
+        batch = super().__getitem__(idx_trj)
 
         value = self.values[idx_trj, idx_ltl]
         if self.normed:

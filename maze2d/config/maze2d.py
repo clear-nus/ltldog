@@ -179,6 +179,10 @@ maze2d_umaze_v1 = {
         'horizon': 256,
         'n_diffusion_steps': 256,
 
+        ## loading
+        'diffusion_loadpath': 'f:diffusion/H{horizon}_T{n_diffusion_steps}/cuda118',
+        'rg_value_loadpath': 'f:value/H{horizon}_T{n_diffusion_steps}/cuda118',
+
         'n_guide_steps': {'rg':10, 'dps':10},
         'scale': {'rg':50, 'dps':10},
         't_stopgrad': {'rg':2, 'dps':2},
@@ -210,6 +214,10 @@ maze2d_medium_v1 = {
         'horizon': 384,
         'n_diffusion_steps': 256,
 
+        ## loading
+        'diffusion_loadpath': 'f:diffusion/H{horizon}_T{n_diffusion_steps}/cuda118',
+        'rg_value_loadpath': 'f:value/H{horizon}_T{n_diffusion_steps}/cuda118',
+
         'n_guide_steps': {'rg':10, 'dps':10},
         'scale': {'rg':50, 'dps':10},
         't_stopgrad': {'rg':2, 'dps':2},
@@ -240,6 +248,10 @@ maze2d_large_v1 = {
     'test': {
         'horizon': 512,
         'n_diffusion_steps': 256,
+
+        ## loading
+        'diffusion_loadpath': 'f:diffusion/H{horizon}_T{n_diffusion_steps}/cuda118',
+        'rg_value_loadpath': 'f:value/H{horizon}_T{n_diffusion_steps}/cuda118',
 
         'n_guide_steps': {'rg':10, 'dps':10},
         'scale': {'rg':50, 'dps':10},

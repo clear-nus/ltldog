@@ -35,7 +35,7 @@ def get_graphs(props, ltls):
     return graphs
 
 def get_policy_rg(diffusion, normalizer, args):
-    rg_value_experiment = utils.load_diffusion(args.logbase, args.dataset, args.rg_value_loadpath, epoch=args.dtl_value_epoch)
+    rg_value_experiment = utils.load_diffusion(args.logbase, args.dataset, args.rg_value_loadpath, epoch=args.rg_value_epoch)
     rg_value_function = rg_value_experiment.ema
 
     guide_config = utils.Config('guides.ValueGuide', model=rg_value_function, graph=None, verbose=False)

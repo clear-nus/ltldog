@@ -1,0 +1,31 @@
+setuptools<64.0.0
+cython<3
+typed-argument-parser
+gitpython
+ring
+parsimonious
+funcy
+lenses
+numpy
+matplotlib
+scikit-image
+scikit-video
+scikit-learn
+einops
+# --extra-index-url https://download.pytorch.org/whl/cu113
+# torch==1.12.1+cu113
+# torchvision==0.13.1+cu113
+# torchaudio==0.12.1
+# https://data.dgl.ai/wheels/dgl_cu113-0.7.1-cp38-cp38-manylinux1_x86_64.whl
+--extra-index-url https://download.pytorch.org/whl/cu116
+torch==1.12.1+cu116
+--find-links https://data.dgl.ai/wheels/cu118/repo.html
+dgl==1.1.1
+cffi
+lockfile
+patchelf
+git+https://github.com/Farama-Foundation/d4rl@f2a05c0d66722499bf8031b094d9af3aea7c372b#egg=d4rl
+gym<0.24
+# requires libosmesa6-dev libgl1-mesa-glx libglfw3 libglew-dev by the instructions from mujoco_py: https://docs.pytorch.org/rl/0.10/reference/generated/knowledge_base/MUJOCO_INSTALLATION.html
+# mujoco-py==2.0.2.5
+mujoco-py==2.1.2.14
